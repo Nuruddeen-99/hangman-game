@@ -1,0 +1,9 @@
+{
+    "editor.fastScrollSensitivity": 2,
+    "editor.scrollbar.scrollByPage": true,
+    "editor.scrollBeyondLastLine": false,
+    "editor.smoothScrolling": true,
+    "editor.stickyScroll.scrollWithEditor": false,
+    "workbench.list.fastScrollSensitivity": 2,
+    "workbench.list.scrollByPage": true
+}

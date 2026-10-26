@@ -1,0 +1,25 @@
+body{background-color: orange}
+
+.ct{
+justify-content: center;
+height: auto;
+width: 300px;
+border: 2px solid black;
+border-radius: 15px;
+padding: 10px;
+background-color: #deb887;
+font-size: 17px;
+}
+.ipt{
+justify-content: center;
+height: 30px;
+}
+input{
+margin-left: 10px;
+height: 20px;
+}
+img{
+	width: 150px; height: 150px; border-radius: 35px;
+}
+button{width: 85px; height: 35px; font-size: 18px; border-radius: 15px; }
+button:hover{background-color: #00bfff; color: white;box-shadow: 0 0px 2px #000}
