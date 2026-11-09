@@ -1,72 +1,94 @@
 import React, { useState, useEffect } from 'react';
 import './Game.css';
 import { wordBank } from './bank';
+import { useNavigate } from 'react-router-dom';
 
 function Game() {
+  const navigate = useNavigate();
 	
   const [userSelection, setUserSelection] = useState('');
   const [chosenWord, setChosenWord] = useState('');
   const [hiddenWord, setHiddenWord] = useState([]);
   const [chances, setChances] = useState(5);
+  const [guessedLetters, setGuessedLetters] = useState(new Set());
 
-  function wordSelected(wordBank) {
-    const wordBankIndex = Math.floor(Math.random() * wordBank.length);
-    const word = wordBank[wordBankIndex];
-	return word;
+  function wordSelected(bank) {
+    const wordBankIndex = Math.floor(Math.random() * bank.length);
+    return bank[wordBankIndex];
   }
 
   useEffect(() => {
     const newWord = wordSelected(wordBank);
     setChosenWord(newWord);
-    setHiddenWord(newWord.split('').map(() => '_ '));
+    setHiddenWord(newWord.split('').map(() => '_'));
   }, []);
+
   useEffect(() => {
-    initiateGuess(); //eslint-disable-next-line
+    if (userSelection !== "") {
+      initiateGuess(userSelection);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userSelection]);
 
   useEffect(() => {
-  if (userSelection !== "" && hiddenWord.join('') === chosenWord) {
-     setTimeout(() => {
-      alert("YOU HAVE WON");
-      alert("Click OK to Play Again");
-	  window.location.reload();
-    }, 800);
-	
-  }
-  }, [userSelection, hiddenWord, chosenWord]);
+    if (chosenWord && hiddenWord.length > 0 && hiddenWord.join('') === chosenWord) {
+      setTimeout(() => {
+        alert("YOU HAVE WON");
+        alert("Click OK to Play Again");
+        window.location.reload();
+      }, 800);
+    }
+  }, [hiddenWord, chosenWord]);
 
+  useEffect(() => {
+    const handleKeyDown = (event) => {
+      const letter = event.key.toUpperCase();
+      if (/^[A-Z]$/.test(letter)) {
+        if (!guessedLetters.has(letter) && chances > 0) {
+          setGuessedLetters(prev => new Set(prev).add(letter));
+          setUserSelection(letter);
+        }
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [guessedLetters, chances]);
+
+  function handleGuess(letter) {
+    if (guessedLetters.has(letter) || chances <= 0) return;
+    setGuessedLetters(prev => new Set(prev).add(letter));
+    setUserSelection(letter);
+  }
 
   function death() {
-	  setTimeout(() => {
- alert(`GAME OVER!!!\nAnswer was: ${chosenWord}`);
-	window.location.reload();
-	  }, 800);	
+    setTimeout(() => {
+      alert(`GAME OVER!!!\nAnswer was: ${chosenWord}`);
+      window.location.reload();
+    }, 800);	
   }
 
-
-  function initiateGuess() {
-      if (!chosenWord.includes(userSelection)) {
-		  drawHangman(chances);
-      setChances(chances - 1);
-      if (chances - 1 === 0) {
-        death();
-      }
-    } else if (userSelection === "") {
-      if (chances === 0) {
+  function initiateGuess(selection) {
+    if (!chosenWord.includes(selection)) {
+      const nextChances = chances - 1;
+      drawHangman(chances);
+      setChances(nextChances);
+      if (nextChances === 0) {
         death();
       }
     } else {
       const newHiddenWord = [...hiddenWord];
       for (let i = 0; i < chosenWord.length; i++) {
-        if (chosenWord[i] === userSelection) {
-          newHiddenWord[i] = userSelection;
+        if (chosenWord[i] === selection) {
+          newHiddenWord[i] = selection;
         }
       }
       setHiddenWord(newHiddenWord);
     }
   }
 
-function drawHangman(chances) {
+  function drawHangman(currentChances) {
     var canvas = document.getElementById('hangmanCanvas');
     if (!canvas) {
         canvas = document.createElement('canvas');
@@ -77,7 +99,7 @@ function drawHangman(chances) {
     }
     var ctx = canvas.getContext('2d');
     ctx.lineWidth = 4;
-    switch (chances) {
+    switch (currentChances) {
 		default:
 		    break;
         case 5:
@@ -115,33 +137,57 @@ function drawHangman(chances) {
             ctx.stroke();
             break;
     }
-}
-
-
+  }
 
   return (
     <>
-      <h1 style={{ textAlign: 'center' }}>Guess the Word</h1>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 20px' }}>
+        <h1 style={{ margin: '0 auto' }}>Guess the Word</h1>
+        <button 
+          style={{ backgroundColor: '#ff4d4d', color: 'white', width: '90px' }} 
+          onClick={() => navigate('/')}
+        >
+          Log Out
+        </button>
+      </div>
       <center><div id="a"></div></center>
 	  <div style={{fontSize:20, fontFamily:'Calibri', marginLeft:75}}>You have {chances} Chances left</div>
       <div id="b">
-        {hiddenWord}
+        {hiddenWord.join(' ')}
       </div>
       <br />
       <center><div id="c">
         <div>
           {Array.from("QWERTYUIOP").map((letter) => (
-            <button key={letter} onClick={(event) => { event.target.disabled = true; setUserSelection(letter);}}>{letter}</button>
+            <button 
+              key={letter} 
+              disabled={guessedLetters.has(letter)}
+              onClick={() => handleGuess(letter)}
+            >
+              {letter}
+            </button>
           ))}
         </div>
         <div>
           {Array.from("ASDFGHJKL").map((letter) => (
-            <button key={letter} onClick={(event) => { event.target.disabled = true; setUserSelection(letter);}}>{letter}</button>
+            <button 
+              key={letter} 
+              disabled={guessedLetters.has(letter)}
+              onClick={() => handleGuess(letter)}
+            >
+              {letter}
+            </button>
           ))}
         </div>
         <div>
           {Array.from("ZXCVBNM").map((letter) => (
-            <button key={letter} onClick={(event) => { event.target.disabled = true; setUserSelection(letter);}}>{letter}</button>
+            <button 
+              key={letter} 
+              disabled={guessedLetters.has(letter)}
+              onClick={() => handleGuess(letter)}
+            >
+              {letter}
+            </button>
           ))}
         </div>
       </div></center>
