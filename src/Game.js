@@ -141,10 +141,10 @@ function Game() {
 
   return (
     <>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 20px' }}>
-        <h1 style={{ margin: '0 auto' }}>Guess the Word</h1>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 20px', position: 'relative' }}>
+        <h1 style={{ width: '100%', textAlign: 'center', margin: 0 }}>Guess the Word</h1>
         <button 
-          style={{ backgroundColor: '#ff4d4d', color: 'white', width: '90px' }} 
+          style={{ backgroundColor: '#ff4d4d', color: 'white', width: '90px', position: 'absolute', right: '20px' }} 
           onClick={() => navigate('/')}
         >
           Log Out
