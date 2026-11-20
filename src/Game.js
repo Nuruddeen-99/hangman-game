@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import './Game.css';
 import { wordBank } from './bank';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 
 function Game() {
   const navigate = useNavigate();
@@ -11,6 +12,24 @@ function Game() {
   const [hiddenWord, setHiddenWord] = useState([]);
   const [chances, setChances] = useState(5);
   const [guessedLetters, setGuessedLetters] = useState(new Set());
+  const [checkingAuth, setCheckingAuth] = useState(true);
+
+  useEffect(() => {
+    let active = true;
+    axios.get('/api/session')
+      .then(() => { if (active) setCheckingAuth(false); })
+      .catch(() => { if (active) navigate('/'); });
+    return () => { active = false; };
+  }, [navigate]);
+
+  const logout = async () => {
+    try {
+      await axios.post('/api/logout');
+    } catch (error) {
+      // Even if the request fails, still send the user back to the login page.
+    }
+    navigate('/');
+  };
 
   function wordSelected(bank) {
     const wordBankIndex = Math.floor(Math.random() * bank.length);
@@ -44,7 +63,7 @@ function Game() {
     const handleKeyDown = (event) => {
       const letter = event.key.toUpperCase();
       if (/^[A-Z]$/.test(letter)) {
-        if (!guessedLetters.has(letter) && chances > 0) {
+        if (!checkingAuth && !guessedLetters.has(letter) && chances > 0) {
           setGuessedLetters(prev => new Set(prev).add(letter));
           setUserSelection(letter);
         }
@@ -54,10 +73,10 @@ function Game() {
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [guessedLetters, chances]);
+  }, [guessedLetters, chances, checkingAuth]);
 
   function handleGuess(letter) {
-    if (guessedLetters.has(letter) || chances <= 0) return;
+    if (checkingAuth || guessedLetters.has(letter) || chances <= 0) return;
     setGuessedLetters(prev => new Set(prev).add(letter));
     setUserSelection(letter);
   }
@@ -139,13 +158,21 @@ function Game() {
     }
   }
 
+  if (checkingAuth) {
+    return (
+      <div style={{ textAlign: 'center', marginTop: 100, fontFamily: 'Calibri', fontSize: 20 }}>
+        Loading...
+      </div>
+    );
+  }
+
   return (
     <>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 20px', position: 'relative' }}>
         <h1 style={{ width: '100%', textAlign: 'center', margin: 0 }}>Guess the Word</h1>
         <button 
           style={{ backgroundColor: '#ff4d4d', color: 'white', width: '90px', position: 'absolute', right: '20px' }} 
-          onClick={() => navigate('/')}
+          onClick={logout}
         >
           Log Out
         </button>

@@ -2,6 +2,30 @@
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 
+## Local development (Netlify Functions + Blobs)
+
+`npm start` only runs the React UI. Auth and the game's session guard live in Netlify Functions, so use:
+
+```powershell
+npx netlify login
+npx netlify link      # link this folder to your Netlify site
+npm run dev           # netlify dev: UI + functions + local Blobs
+```
+
+Data lives in two Netlify Blobs stores: `hangman-users` and `hangman-sessions`. There is no database or `MONGODB_URI` anymore.
+
+`netlify dev` uses a sandboxed local Blobs store, so nothing needs to be deployed to develop locally. Two requirements:
+
+- You must be logged in and the folder must be linked to a site you own (`npm run dev` after `netlify link`). The site does not need a successful deploy, but it must exist and not be disabled.
+- Local Blobs data is separate from production Blobs data; data created in dev will not appear in production.
+
+If a function reports `MissingBlobsEnvironmentError`, check that the project is linked and that `configureBlobs(event)` (from `netlify/lib/blobs.js`) is called at the top of every handler. Those handlers use the legacy `exports.handler` (Lambda compatibility mode), where Blobs configuration is not injected automatically. The helper also forwards `uncachedEdgeURL`, which strong-consistency reads require and which `connectLambda()` omits.
+
+## Deploying
+
+Push to the connected Git repo, or run `npx netlify deploy --prod`. `netlify.toml` builds the React app, bundles the functions, routes `/api/*`, and adds the SPA fallback for `/Game`, `/Signup`, and `/Confirm`.
+
+
 ## Available Scripts
 
 In the project directory, you can run:

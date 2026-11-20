@@ -7,24 +7,16 @@ function Signup() {
 
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
   const navigate = useNavigate();
 
-const handleSignup = async () => {
+  const handleSignup = async () => {
+    setErrorMessage('');
     try {
-      // Send a POST request to your Express.js server
-      const response = await axios.post('http://localhost:3001/api/signup', { username, password });
-
-      // Check the response from the server
-      if (response.status === 200) {
-        // Signup successful, you can redirect to a confirmation page or login page
-        navigate('/Confirm');
-      } else {
-        // Handle other responses, e.g., display an error message
-        console.error('Signup failed:', response.data.message);
-      }
+      await axios.post('/api/signup', { username, password });
+      navigate('/Confirm');
     } catch (error) {
-      // Handle network or other errors
-      console.error('Error:', error);
+      setErrorMessage(error.response?.data?.message || 'Unable to sign up');
     }
   };
 
@@ -33,10 +25,11 @@ const handleSignup = async () => {
     <br/>
          <center><div className="ct">
          <h1 style={{textAlign: 'center'}}>Signup</h1><br/>
-           
+
            <div>
              <img src="icon.png" alt="icon"/>
-           </div><br/><br/>
+           </div>
+		   <p style={{fontFamily: 'Cursive', color: 'red'}}>{errorMessage}</p><br/>
            <div className="ipt"><label>
 		     <b>Username:</b></label>
 		     <input type="text" value={username} onChange={(e) => setUsername(e.target.value)} placeholder="Create Username" name="uname" required/>
@@ -47,7 +40,7 @@ const handleSignup = async () => {
 		   </div><br/><br/>
 		   <button type="button" onClick={handleSignup}>Signup</button><br/><br/>
          </div></center>
-		 
+
 		</div>
   );
 }

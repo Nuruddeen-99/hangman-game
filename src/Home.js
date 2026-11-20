@@ -4,33 +4,28 @@ import React, { useState } from 'react';
 import axios from 'axios';
 
 function Home(){
-	
+
   const navigate = useNavigate();
 
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
-  
+
   const log = async () => {
+    setErrorMessage('');
     try {
-      const response = await axios.post('http://localhost:3001/api/home', { username, password });
-      if (response.status === 200) {
-        // If the response indicates a successful login, navigate to the Game page
-        navigate('/Game');
-      } else if (response.status === 203){
-        // Handle login failure, e.g., display an error message
-       setErrorMessage('Incorrect Username or Password');
-      }
+      await axios.post('/api/home', { username, password });
+      // The session cookie is set by the server; go to the game.
+      navigate('/Game');
     } catch (error) {
-    console.error('Error during login:', error);
-     }
+      setErrorMessage(error.response?.data?.message || 'Unable to log in');
+    }
   };
 
   const sign = () => {
-    navigate('/Signup'); 
+    navigate('/Signup');
   };
-	
-	
+
 return(
     <><br/><br/>
          <center><div className="ct"><br/><br/>

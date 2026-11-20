@@ -3,17 +3,12 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "@netlify/blobs": "^11.1.9",
     "@testing-library/jest-dom": "^5.17.0",
     "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^13.5.0",
     "axios": "^1.5.0",
-    "cors": "^2.8.5",
-    "dotenv": "^18.0.9",
-    "express": "^5.3.0",
-    "mongodb": "^6.1.0",
-    "mongoose": "^7.5.3",
-    "mysql": "^2.18.1",
-    "mysql2": "^3.6.0",
+    "bcryptjs": "^3.0.3",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router-dom": "^7.18.4",
@@ -22,6 +17,7 @@
   },
   "scripts": {
     "start": "react-scripts start",
+    "dev": "netlify dev",
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
@@ -49,6 +45,7 @@
     "core-js@3.51.0": true
   },
   "devDependencies": {
-    "@babel/plugin-proposal-private-property-in-object": "^7.21.11"
+    "@babel/plugin-proposal-private-property-in-object": "^7.21.11",
+    "netlify-cli": "^27.20.1"
   }
 }
