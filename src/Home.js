@@ -10,15 +10,27 @@ function Home(){
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
-  const log = async () => {
+  const log = async (event) => {
+    event.preventDefault();
+    if (submitting) return;
     setErrorMessage('');
+
+    if (!username.trim() || !password) {
+      setErrorMessage('Username and password are required');
+      return;
+    }
+
+    setSubmitting(true);
     try {
       await axios.post('/api/home', { username, password });
       // The session cookie is set by the server; go to the game.
       navigate('/Game');
     } catch (error) {
       setErrorMessage(error.response?.data?.message || 'Unable to log in');
+      setSubmitting(false);
     }
   };
 
@@ -26,26 +38,79 @@ function Home(){
     navigate('/Signup');
   };
 
-return(
-    <><br/><br/>
-         <center><div className="ct"><br/><br/>
-           <div>
-             <img src="icon.png" alt="icon"/>
-           </div>
-		   <p style={{fontFamily: 'Cursive', color: 'red'}}>{errorMessage}</p><br/>
-           <div className="ipt">
-		   <label><b>Username:</b></label>
-		     <input type="text" value={username} onChange={(e) => setUsername(e.target.value)} placeholder="Enter Username" name="uname" required/>
-		   </div><br/>
-           <div className="ipt">
-		     <label><b>Password:</b></label>
-             <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Enter Password" name="psw" required/>
-		   </div><br/><br/>
-		   <button type="button" onClick={log}>Login</button><br/><br/>
-		   <button type="button" onClick={sign}>Signup</button><br/>
-         </div></center>
-	</>
-);
+  return (
+    <div className="auth-wrap">
+      <form className="ct auth-card" onSubmit={log} noValidate>
+        <div>
+          <img src="icon.png" alt="Hangman" />
+        </div>
+        <h1 className="auth-title">Hangman</h1>
+        <p className="auth-subtitle">Log in to play</p>
+
+        {errorMessage && (
+          <p className="auth-error" role="alert">{errorMessage}</p>
+        )}
+
+        <div className="auth-field">
+          <label className="auth-label" htmlFor="login-username">Username</label>
+          <span className="auth-input">
+            <input
+              id="login-username"
+              type="text"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              placeholder="Enter Username"
+              name="uname"
+              autoComplete="username"
+              required
+            />
+          </span>
+        </div>
+
+        <div className="auth-field">
+          <label className="auth-label" htmlFor="login-password">Password</label>
+          <span className="auth-input">
+            <input
+              id="login-password"
+              type={showPassword ? 'text' : 'password'}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Enter Password"
+              name="psw"
+              autoComplete="current-password"
+              required
+            />
+            <button
+              type="button"
+              className="auth-reveal"
+              onClick={() => setShowPassword((v) => !v)}
+              aria-label={showPassword ? 'Hide password' : 'Show password'}
+            >
+              {showPassword ? 'Hide' : 'Show'}
+            </button>
+          </span>
+        </div>
+
+        <button className="auth-btn" type="submit" disabled={submitting}>
+          {submitting ? (
+            <>
+              <span className="auth-spinner" aria-hidden="true" />
+              Logging in...
+            </>
+          ) : (
+            'Login'
+          )}
+        </button>
+
+        <p className="auth-alt">
+          No account yet?{' '}
+          <button type="button" className="auth-link" onClick={sign}>
+            Sign up
+          </button>
+        </p>
+      </form>
+    </div>
+  );
 }
 
 export default Home;

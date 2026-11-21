@@ -13,6 +13,9 @@ function Game() {
   const [chances, setChances] = useState(5);
   const [guessedLetters, setGuessedLetters] = useState(new Set());
   const [checkingAuth, setCheckingAuth] = useState(true);
+  const [gameOver, setGameOver] = useState(false);
+  const [popup, setPopup] = useState(null); // { won: boolean, answer?: string }
+  const [loggingOut, setLoggingOut] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -23,8 +26,13 @@ function Game() {
   }, [navigate]);
 
   const logout = async () => {
+    setLoggingOut(true);
     try {
-      await axios.post('/api/logout');
+      // Minimum display time keeps the spinner from flashing on fast responses.
+      await Promise.all([
+        axios.post('/api/logout'),
+        new Promise((resolve) => setTimeout(resolve, 700)),
+      ]);
     } catch (error) {
       // Even if the request fails, still send the user back to the login page.
     }
@@ -51,19 +59,23 @@ function Game() {
 
   useEffect(() => {
     if (chosenWord && hiddenWord.length > 0 && hiddenWord.join('') === chosenWord) {
-      setTimeout(() => {
-        alert("YOU HAVE WON");
-        alert("Click OK to Play Again");
-        window.location.reload();
+      const timer = setTimeout(() => {
+        setGameOver(true);
+        setPopup({ won: true, answer: chosenWord });
       }, 800);
+      return () => clearTimeout(timer);
     }
   }, [hiddenWord, chosenWord]);
 
   useEffect(() => {
     const handleKeyDown = (event) => {
+      if (event.key === 'Escape' && popup) {
+        setPopup(null);
+        return;
+      }
       const letter = event.key.toUpperCase();
       if (/^[A-Z]$/.test(letter)) {
-        if (!checkingAuth && !guessedLetters.has(letter) && chances > 0) {
+        if (!checkingAuth && !gameOver && !guessedLetters.has(letter) && chances > 0) {
           setGuessedLetters(prev => new Set(prev).add(letter));
           setUserSelection(letter);
         }
@@ -73,19 +85,19 @@ function Game() {
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [guessedLetters, chances, checkingAuth]);
+  }, [guessedLetters, chances, checkingAuth, gameOver, popup]);
 
   function handleGuess(letter) {
-    if (checkingAuth || guessedLetters.has(letter) || chances <= 0) return;
+    if (checkingAuth || gameOver || guessedLetters.has(letter) || chances <= 0) return;
     setGuessedLetters(prev => new Set(prev).add(letter));
     setUserSelection(letter);
   }
 
   function death() {
     setTimeout(() => {
-      alert(`GAME OVER!!!\nAnswer was: ${chosenWord}`);
-      window.location.reload();
-    }, 800);	
+      setGameOver(true);
+      setPopup({ won: false, answer: chosenWord });
+    }, 800);
   }
 
   function initiateGuess(selection) {
@@ -171,14 +183,18 @@ function Game() {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 20px', position: 'relative' }}>
         <h1 style={{ width: '100%', textAlign: 'center', margin: 0 }}>Guess the Word</h1>
         <button 
-          style={{ backgroundColor: '#ff4d4d', color: 'white', width: '90px', position: 'absolute', right: '20px' }} 
+          className="game-btn logout-btn"
+          type="button"
+          disabled={loggingOut}
           onClick={logout}
         >
           Log Out
         </button>
       </div>
       <center><div id="a"></div></center>
-	  <div style={{fontSize:20, fontFamily:'Calibri', marginLeft:75}}>You have {chances} Chances left</div>
+      <div className={chances <= 2 ? 'chances chances--low' : 'chances'}>
+        You have {chances} Chances left
+      </div>
       <div id="b">
         {hiddenWord.join(' ')}
       </div>
@@ -188,7 +204,7 @@ function Game() {
           {Array.from("QWERTYUIOP").map((letter) => (
             <button 
               key={letter} 
-              disabled={guessedLetters.has(letter)}
+              disabled={gameOver || guessedLetters.has(letter)}
               onClick={() => handleGuess(letter)}
             >
               {letter}
@@ -199,7 +215,7 @@ function Game() {
           {Array.from("ASDFGHJKL").map((letter) => (
             <button 
               key={letter} 
-              disabled={guessedLetters.has(letter)}
+              disabled={gameOver || guessedLetters.has(letter)}
               onClick={() => handleGuess(letter)}
             >
               {letter}
@@ -210,7 +226,7 @@ function Game() {
           {Array.from("ZXCVBNM").map((letter) => (
             <button 
               key={letter} 
-              disabled={guessedLetters.has(letter)}
+              disabled={gameOver || guessedLetters.has(letter)}
               onClick={() => handleGuess(letter)}
             >
               {letter}
@@ -218,7 +234,56 @@ function Game() {
           ))}
         </div>
       </div></center>
-      <button style={{ marginLeft: 20,backgroundColor:'yellow' }} onClick={() => window.location.reload()}>Restart</button>
+      <button className="game-btn restart-btn" onClick={() => window.location.reload()}>Restart</button>
+
+      {loggingOut && (
+        <div className="result-overlay" role="status" aria-live="polite">
+          <div className="logout-popup">
+            <span className="spinner" aria-hidden="true" />
+            <p className="logout-text">Logging out...</p>
+          </div>
+        </div>
+      )}
+
+      {popup && (
+        <div className="result-overlay">
+          <div
+            className={`result-popup ${popup.won ? 'result-popup--win' : 'result-popup--lose'}`}
+            role="dialog"
+            aria-modal="true"
+            aria-label={popup.won ? 'You won' : 'Game over'}
+          >
+            <button
+              type="button"
+              className="popup-close"
+              onClick={() => setPopup(null)}
+              aria-label="Close"
+            >
+              ×
+            </button>
+            <h2 className="popup-title">{popup.won ? 'You Win!' : 'Game Over'}</h2>
+            <p className="popup-message">
+              {popup.won ? (
+                'You guessed the word.'
+              ) : (
+                <>
+                  The word was:{' '}
+                  <span className="popup-word">{popup.answer}</span>
+                </>
+              )}
+            </p>
+            <div className="popup-actions">
+              <button
+                type="button"
+                className="popup-btn"
+                onClick={() => window.location.reload()}
+              >
+                Play Again
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }

@@ -1,26 +1,23 @@
 import './App.css';
 import { useNavigate } from 'react-router-dom';
 
+
 function Confirm(){
 	const navigate = useNavigate();
-	const log = () => {
-		navigate('/');
-	}
-	
-	return(
-    <>	
-<br/>
-<center><div className="ct"><br/><br/>
-           <div>
-             <img src="icon.png" alt="icon"/>
-           </div><br/><br/>
-           <br/><br/>
-		   <h3 style={{fontFamily: 'verdana'}}>Signup Successful!</h3><br/><br/>
-<button  style={{width:120}} type="button" onClick={log}>Go to Login</button>
-		   
-         </div></center>
 
-	</>
+	return(
+    <div className="auth-wrap">
+      <div className="ct auth-card auth-card--success">
+        <div>
+          <img src="icon.png" alt="Hangman" />
+        </div>
+        <h1 className="auth-title">Signup Successful!</h1>
+        <p className="auth-subtitle">Your account is ready. Log in to start playing.</p>
+        <button className="auth-btn" type="button" onClick={() => navigate('/')}>
+          Go to Login
+        </button>
+      </div>
+    </div>
 	)
 }
 export default Confirm
